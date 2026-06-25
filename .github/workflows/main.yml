@@ -20,6 +20,8 @@ jobs:
     # Step 2 - Install KIND + kubectl   => Automatically installs KIND, create cluster and configures kubectl
       - name: Create KIND Cluster 
         uses: helm/kind-action@v1
+        with:
+          cluster_name: calculator-cluster
         
     # Step 3 - Verify Cluster  => Checks Kubernetes cluster working.
       - name: Check Cluster 
@@ -35,7 +37,7 @@ jobs:
     # Step 5 - Load Image into KIND  => Makes image available inside Kubernetes cluster. ## VERY IMPORTANT STEP ## 
       - name: Load Image into KIND 
         run: | 
-          kind load docker-image calculator:test
+          kind load docker-image calculator --name calculator-cluster
     
     # Step 6 - Deploy Application    => Creates: Deployment, replicaset, pods and service
       - name: Deploy to Kubernetes 
