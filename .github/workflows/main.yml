@@ -37,7 +37,7 @@ jobs:
     # Step 5 - Load Image into KIND  => Makes image available inside Kubernetes cluster. ## VERY IMPORTANT STEP ## 
       - name: Load Image into KIND 
         run: | 
-          kind load docker-image calculator --name calculator-cluster
+          kind load docker-image calculator:test --name calculator-cluster
     
     # Step 6 - Deploy Application    => Creates: Deployment, replicaset, pods and service
       - name: Deploy to Kubernetes 
