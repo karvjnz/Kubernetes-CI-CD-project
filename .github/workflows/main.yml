@@ -1,13 +1,68 @@
 # .github/workflows/main.yml
-name: Push_Event_Workflow
-on: push  # on Push Event
+name: Kubernetes KIND CI Pipeline
+on:
+  push:  # on Push Event
+    branches:
+      - main
+
 jobs:
-  # This workflow contains a single job called "build". "build" is the name of the job
-  build:
+   # This workflow contains a single job called "build". "build" is the name of the job
+  kubernetes-test:
     # The type of runner that the job will run on. Where the job should run. This is called defining the runner
     runs-on: ubuntu-latest
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Runs a single command using the runners shell. Name of the step and what this step should do
-      - name: Build Steps
-        run: echo "Running Steps from Build Job"
+    
+    # Step 1 - Checkout Repository => Downloads your GitHub code into runner
+      - name: Checkout Code
+        uses: actions/checkout@v4 
+        
+    # Step 2 - Install KIND + kubectl   => Automatically installs KIND, create cluster and configures kubectl
+      - name: Create KIND Cluster 
+        uses: helm/kind-action@v1
+        
+    # Step 3 - Verify Cluster  => Checks Kubernetes cluster working.
+      - name: Check Cluster 
+        run: | 
+          kubectl cluster-info 
+          kubectl get nodes
+
+    # Step 4 - Build Docker Image  => Builds image from your Dockerfile.
+      - name: Build Docker Image 
+        run: | 
+          docker build -t calculator:test .
+
+    # Step 5 - Load Image into KIND  => Makes image available inside Kubernetes cluster. ## VERY IMPORTANT STEP ## 
+      - name: Load Image into KIND 
+        run: | 
+          kind load docker-image calculator:test
+    
+    # Step 6 - Deploy Application    => Creates: Deployment, replicaset, pods and service
+      - name: Deploy to Kubernetes 
+        run: | 
+          kubectl apply -f deployment.yaml 
+          kubectl apply -f service.yaml
+
+    # Step 7 - Wait for Deployment    => Ensures pods are running before tests.
+      - name: Wait for Pods 
+        run: | 
+          kubectl wait --for=condition=available deployment/calculator --timeout=120s
+
+    # Step 8 - Verify Resources    => Shows: pods, deployments, services in GitHub Actions logs
+      - name: Verify Kubernetes Resources
+        run: | 
+          kubectl get deployments 
+          kubectl get pods 
+          kubectl get services
+
+    # Step 9 - Port Forward Service   => Makes app accessible temporarily.
+      - name: Port Forward Service 
+        run: | 
+          kubectl port-forward service/calculator 5000:5000 & sleep 10
+
+    # Step 10 - Test Application   => Tests application response. If app fails: Pipeline FAILS, If app works:Pipeline PASSES
+      - name: Test Application 
+        run: | 
+          curl http://localhost:5000
+    
+    
