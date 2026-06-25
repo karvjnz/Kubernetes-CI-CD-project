@@ -2,8 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: calculator
+
 spec:
-  replicas: 3
+  replicas: 1
 
   selector:
     matchLabels:
@@ -15,9 +16,11 @@ spec:
         app: calculator
 
     spec:
+      terminationGracePeriodSeconds: 0
+      
       containers:
       - name: calculator
-        image: karvjnz/calculator:test
+        image: calculator:test
         imagePullPolicy: Never
 
         ports:
@@ -29,3 +32,12 @@ spec:
             port: 5000
           initialDelaySeconds: 5
           periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3
+
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 10
