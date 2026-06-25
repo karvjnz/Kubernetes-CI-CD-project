@@ -45,6 +45,15 @@ jobs:
           kubectl apply -f deployment.yaml 
           kubectl apply -f service.yaml
 
+     # NEW STEP - Debug Pod Status (ADD HERE)
+      - name: Debug Kubernetes (Full Insight)
+        run: |
+          kubectl get all
+          kubectl get pods -o wide
+          kubectl describe pod -l app=calculator
+          kubectl logs -l app=calculator --tail=50
+          kubectl get events --sort-by=.metadata.creationTimestamp
+    
     # Step 7 - Wait for Deployment    => Ensures pods are running before tests.
       - name: Wait for Pods 
         run: | 
